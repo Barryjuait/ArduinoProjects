@@ -1,3 +1,4 @@
+/*
   author: Sebastian Barrientos
   Protocol to send pulses to the stimulator MultiChannel.
   HFS and LFS protocol are taken from Picconi et al, 2003.
@@ -28,16 +29,16 @@ void setup() {
 }
 
 void loop() {
-  //put your main code here, to run repeatedly:
+  //Arduino will receive a message in the format: $+(Procedure Code [int])+$+(Freq [int])+$(Duration [int])+(l or r)+(structure ID)
   while (Serial.read() != '$') ;  // Wait for $
-  procedure = Serial.read();// Procedure code
+  procedure = Serial.parseInt();// Procedure code
   Freq = Serial.parseInt(); // Frequency of the stimulation train
   Duration = Serial.parseInt(); // For how long we stimulate
-  Hemi = Serial.read(); // Hemisphere
+  Hemi = Serial.parseInt(); // Hemisphere IDX
   Structure = Serial.parseInt();
 
   //check stim pins:
-  if (Hemi == "l") {
+  if (Hemi == 1) {
     if (Structure == 1) {
       stimElectrode = pins[0];
     }
@@ -46,8 +47,10 @@ void loop() {
     }
     else if (Structure == 3) {
       stimElectrode = pins[2];
+    }else{
+      break; //no output
     }
-  } else {
+  } else if (Hemi == 2){
     if (Structure == 1) {
       stimElectrode = pins[3];
     }
@@ -56,18 +59,24 @@ void loop() {
     }
     else if (Structure == 3) {
       stimElectrode = pins[5];
+    }else{
+      break;//no output
     }
+  }else{
+    break; //no output
   }
 
   //Select stim procedure
-  if (procedure == "P") {
+  if (procedure == 0) {
     Probing(Freq, Duration);
   }
-  else if (procedure == 'H') {
+  else if (procedure == 1) {
     HFS(Freq, Duration, stimElectrode);
   }
-  else if (procedure == 'L') {
+  else if (procedure == 2) {
     LFS(Freq, Duration, stimElectrode);
+  }else{
+    break;
   }
 }
 
